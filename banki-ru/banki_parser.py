@@ -1,8 +1,15 @@
+from os.path import dirname, realpath, join
+from datetime import date, timedelta
 from bs4 import BeautifulSoup
 import requests
-import itertools
-from datetime import date, timedelta
 import csv
+import toml
+
+
+PROJECT_DIR = join(dirname(realpath(__file__)), "..")
+CONFIG_PATH = join(PROJECT_DIR, "config.toml")
+config = toml.load(CONFIG_PATH)
+
 
 def get_soup_news_date(year: int, month: int, day: int):
     """
@@ -15,6 +22,7 @@ def get_soup_news_date(year: int, month: int, day: int):
     code_html = 'lf4cbd87d ld6d46e58 lb47af913'
     st = soup.find_all('div', class_=code_html)
     return st
+
 
 def content_news(url: str):
     """
@@ -78,4 +86,4 @@ if __name__ == "__main__":
     # пример
     start = date(2022,10,1)
     end = date(2022,10,7)
-    write_news("news_banki.csv", get_news(start, end))
+    write_news(PROJECT_DIR + config['banki_ru_path'], get_news(start, end))
