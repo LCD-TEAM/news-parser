@@ -37,36 +37,39 @@ driver = webdriver.Firefox(options=options)
 
 def get_news(date_from, date_to):
     dt_range = DatetimeRange(date_from, date_to)
-    driver.get('https://buh.ru/news/uchet_nalogi/')
-    html = driver.page_source
-    soup = BeautifulSoup(html, 'lxml')
-    news_headers = soup.findAll('article', class_='article')
-    news = []
-    for news_header in news_headers:
-        link = news_header.find('a')['href']
-        driver.get(url + link)
-        news_page = driver.page_source
-        news_soup = BeautifulSoup(news_page, 'lxml')
-        date_str = news_soup.find('span', class_='grayd').get_text()
-        article_soup = news_soup.find('div', class_='tip-news', itemprop='articleBody')
-        if datetime.strptime(date_str, '%d.%m.%Y').date() in dt_range:
-            result = {
-                'title': news_soup.find('h1', class_='margin_line-height phead specdiv').get_text(),
-                'date': date_str,
-                'content': article_soup.get_text().rsplit('\n\nОпрос')[0].rstrip(),
-                'num_views': _get_num_views(news_page),
-                'num_comments': _get_num_comments(news_soup),
-                'tags': _get_tags(news_soup)
-            }
-            path = 'news_buhru.csv'
-            with open(path, 'a', encoding='utf-8') as file:
-                keys = result.keys()
-                writer = DictWriter(file, keys)
-                writer.writerow(result)
-        else:
-            break
+    page_num = 1
+    continue_scrap = True
+    while continue_scrap is True:
+        driver.get(f'https://buh.ru/news/uchet_nalogi/?PAGEN_1={page_num}')
+        html = driver.page_source
+        soup = BeautifulSoup(html, 'lxml')
+        news_headers = soup.findAll('article', class_='article')
+        for news_header in news_headers:
+            link = news_header.find('a')['href']
+            driver.get(url + link)
+            news_page = driver.page_source
+            news_soup = BeautifulSoup(news_page, 'lxml')
+            date_str = news_soup.find('span', class_='grayd').get_text()
+            article = news_soup.find('div', class_='tip-news', itemprop='articleBody').findChildren('p')
+            if datetime.strptime(date_str, '%d.%m.%Y').date() in dt_range:
+                result = {
+                    'title': news_soup.find('h1', class_='margin_line-height phead specdiv').get_text(),
+                    'date': date_str,
+                    'content': '\n'.join(list(map(lambda t: t.get_text().rstrip(), article))),
+                    'num_views': _get_num_views(news_page),
+                    'num_comments': _get_num_comments(news_soup),
+                    'tags': _get_tags(news_soup)
+                }
+                path = 'news_buhru.csv'
+                with open(path, 'a', encoding='utf-8') as file:
+                    keys = result.keys()
+                    writer = DictWriter(file, keys)
+                    writer.writerow(result)
+            else:
+                continue_scrap = False
+                break
+        page_num += 1
     driver.quit()
-    return news
 
 def write_news(path, news):
     keys = news[0].keys()

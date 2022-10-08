@@ -82,6 +82,7 @@ def get_article(link: str):
             writer.writerow(result)
     except TimeoutException as e:
         print(e)
+        driver.quit()
 
 
 def get_articles_by_day(date_look):
@@ -121,9 +122,9 @@ def write_news(path, news):
         writer.writerows(news)
 
 if __name__ == '__main__':
-    #start = date(2020, 10, 7)
+    start = date(2020, 10, 7)
     end = date.today()
-    get_news(end, end)
+    get_news(start, end)
     try:
         driver.quit()
     except:
