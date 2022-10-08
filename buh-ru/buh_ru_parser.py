@@ -50,14 +50,18 @@ def get_news(date_from, date_to):
         date_str = news_soup.find('span', class_='grayd').get_text()
         article_soup = news_soup.find('div', class_='tip-news', itemprop='articleBody')
         if datetime.strptime(date_str, '%d.%m.%Y').date() in dt_range:
-            news.append({
+            result = {
                 'title': news_soup.find('h1', class_='margin_line-height phead specdiv').get_text(),
                 'date': date_str,
                 'content': article_soup.get_text().rsplit('\n\nОпрос')[0].rstrip(),
                 'num_views': _get_num_views(news_page),
                 'num_comments': _get_num_comments(news_soup),
                 'tags': _get_tags(news_soup)
-            })
+            }
+            path = 'news_buhru.csv'
+            with open(path, 'a', encoding='utf-8') as file:
+                writer = DictWriter(file, keys)
+                writer.writerow(result)
         else:
             break
     driver.quit()
@@ -74,5 +78,6 @@ def write_news(path, news):
 if __name__ == '__main__':
     start = date(2020, 10, 7)
     end = date.today()
-    write_news('news_buhru.csv', get_news(start, end))
+    #write_news('news_buhru.csv', get_news(start, end))
+    get_news(start, end)
     

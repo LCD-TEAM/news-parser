@@ -66,7 +66,7 @@ def get_article(link: str):
     tags = ''
     if tags_tag is not None:
         tags = tags_tag.get_text()
-    return {
+    result = {
         'title': title,
         'date': date_pub.strftime('%d.%m.%Y'),
         'content': content,
@@ -74,16 +74,19 @@ def get_article(link: str):
         'num_comments': num_comments,
         'tags': tags
     }
+    with open('news_lentaru.csv', 'a', encoding='utf-8') as file:
+        keys = result.keys()
+        writer = DictWriter(file, keys)
+        writer.writeheader()
+        writer.writerow(result)
 
 
 def get_articles_by_day(date_look):
     base_link = form_link_from_date(date_look)
     page_num = 1
     continue_scrap = True
-    articles = []
     while continue_scrap is True:
         link = f'{base_link}/page/{page_num}'
-        print(link)
         driver.get(link)
         lxml = driver.page_source
         soup = BeautifulSoup(lxml, 'lxml')
@@ -93,24 +96,22 @@ def get_articles_by_day(date_look):
         else:
             for li in lis:
                 link = f"{root}{li.find('a')['href']}"
-                articles.append(get_article(link))
+                get_article(link)
         page_num += 1
-    return articles
 
 
 def get_news(date_from: date, date_to: date):
     dt_range = DatetimeRange(date_from, date_to)
     date_now = date_from
     articles = []
+    print('processing...')
     while date_now in dt_range:
-        articles.extend(get_articles_by_day(date_now))
+        get_articles_by_day(date_now)
         date_now += timedelta(days=1)
     driver.quit()
-    return articles
 
 def write_news(path, news):
     keys = news[0].keys()
-
     with open(path, 'w', encoding='utf-8') as file:
         writer = DictWriter(file, keys)
         writer.writeheader()
@@ -119,7 +120,7 @@ def write_news(path, news):
 if __name__ == '__main__':
     start = date(2022, 10, 7)
     end = date.today()
-    write_news('news_lentaru.csv', get_news(start, start))
+    get_news(start, start)
     try:
         driver.quit()
     except:
