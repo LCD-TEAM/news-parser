@@ -88,9 +88,9 @@ if __name__ == "__main__":
     start = date(2020,1,1)
 
     # раскомментить, если начальную дату берешь из файла
-    
+
     # with open(dirname(realpath(__file__)) + '/end_date.txt', 'r') as f_date:
-    #     start = list(map(int, f_date.readline().split('-')))
+        # start = date(*list(map(int, f_date.readline().split('-'))))
 
     end = date.today()
-    get_news(date(*start), end, PROJECT_DIR + config['banki_ru_path'])
+    get_news(start, end, PROJECT_DIR + config['banki_ru_path'])
