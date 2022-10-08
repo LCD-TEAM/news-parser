@@ -27,7 +27,10 @@ def _get_num_comments(soup):
 def _get_tags(soup):
     ls = soup.findAll('div', class_='rubric')
     themes = ';'.join(list(map(lambda t: ';'.join(t.get_text().rstrip().split(',')), ls[0].findAll('a'))))
-    rubrics = ';'.join(list(map(lambda t: ';'.join(t.get_text().rstrip().split(', ')), ls[1].findAll('a'))))
+    if len(ls) > 1:
+        rubrics = ';'.join(list(map(lambda t: ';'.join(t.get_text().rstrip().split(', ')), ls[1].findAll('a'))))
+    else:
+        rubrics = ''
     return themes + ';' + rubrics
 
 url = 'https://buh.ru'
@@ -51,6 +54,7 @@ def get_news(date_from, date_to):
             news_soup = BeautifulSoup(news_page, 'lxml')
             date_str = news_soup.find('span', class_='grayd').get_text()
             article = news_soup.find('div', class_='tip-news', itemprop='articleBody').findChildren('p')
+            print(date_str)
             if datetime.strptime(date_str, '%d.%m.%Y').date() in dt_range:
                 result = {
                     'title': news_soup.find('h1', class_='margin_line-height phead specdiv').get_text(),

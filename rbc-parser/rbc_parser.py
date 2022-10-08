@@ -93,7 +93,7 @@ def get_news(url):
     news = []
     session = requests.Session()
     for link in links:
-        info = get_article(session, link)
+        get_article(session, link)
 
 
 if __name__ == '__main__':
