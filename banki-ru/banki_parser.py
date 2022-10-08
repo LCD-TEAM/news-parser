@@ -5,15 +5,37 @@ from datetime import date, timedelta
 import csv
 
 def get_soup_news_date(year: int, month: int, day: int):
-    url = f"http://banki.ru/news/lenta/?filterType=all&d={day}&m={month}&y={year}"
+    """
+    Возвращает soup страницы с новостями,
+    выпущенные year.month.day
+    """
+    url = f'http://banki.ru/news/lenta/?filterType=all&d={day}&m={month}&y={year}'
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
-    code_html = "lf4cbd87d ld6d46e58 lb47af913"
+    code_html = 'lf4cbd87d ld6d46e58 lb47af913'
     st = soup.find_all('div', class_=code_html)
     return st
 
+def content_news(url: str):
+    """
+    Возвращает текст новости на странице url
+    """
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    code_html = 'l6d291019'
+    st = soup.find_all('div', class_=code_html)[0]
+
+    content = ""
+    for p in st.find_all('p'):
+        content += p.get_text()
+
+    return content
 
 def get_news(start: date, end: date):
+    """
+    Возвращает list новостей в промежутке времени
+    от start до end
+    """
     news = list()
 
     dates = [str(start + timedelta(days = x)) for x in range((end - start).days + 1)]
@@ -34,6 +56,7 @@ def get_news(start: date, end: date):
                     'title': i.a.get_text().strip(),
                     'url': f"https://www.banki.ru{i.a['href']}",
                     'date': date,
+                    'content': content_news(f"https://www.banki.ru{i.a['href']}"),
                     'num_views': views,
                     'num_comments': comments,
                 })
@@ -41,6 +64,9 @@ def get_news(start: date, end: date):
     return news
 
 def write_news(file_path: str, news: list):
+    """
+    Записывает news в file_path в формате csv
+    """
     keys = news[0].keys()
 
     with open(file_path, 'w') as f:
@@ -49,6 +75,7 @@ def write_news(file_path: str, news: list):
         dict_writer.writerows(news)
 
 if __name__ == "__main__":
+    # пример
     start = date(2022,10,1)
     end = date(2022,10,7)
     write_news("news_banki.csv", get_news(start, end))
