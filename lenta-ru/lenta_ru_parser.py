@@ -1,4 +1,5 @@
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -45,40 +46,42 @@ def form_date_from_str(date_str: str):
     return date(int(parts[2]), months[parts[1]], int(parts[0]))
 
 def get_article(link: str):
-    driver.get(link)
-    lxml = driver.page_source
-    soup = BeautifulSoup(lxml, 'lxml')
-    title = soup.find('span', class_='topic-body__title').get_text()
-    date_pub_str = soup.find('time', class_='topic-header__item topic-header__time').get_text()
-    date_pub = form_date_from_str(date_pub_str)
-    unwanted = soup.find('div', class_='tradingview-widget-copyright')
-    if unwanted is not None:
-        unwanted.extract()
-    content = soup.find('div', class_='topic-body__content').get_text().rstrip()
-    num_comments = 0
-    comments_count_tag = soup.find('span', class_='comments__count')
-    if comments_count_tag is not None:
-        num_comments_str = comments_count_tag.get_text()
-        res = re.search(r"\((\d+)\)", num_comments_str)
-        if res is not None:
-            num_comments = int(res.group(1))
-    tags_tag = soup.find('a', class_='rubric-header__link _active')
-    tags = ''
-    if tags_tag is not None:
-        tags = tags_tag.get_text()
-    result = {
-        'title': title,
-        'date': date_pub.strftime('%d.%m.%Y'),
-        'content': content,
-        'num_views': num_comments * 5,
-        'num_comments': num_comments,
-        'tags': tags
-    }
-    with open('news_lentaru.csv', 'a', encoding='utf-8') as file:
-        keys = result.keys()
-        writer = DictWriter(file, keys)
-        writer.writeheader()
-        writer.writerow(result)
+    try:
+        driver.get(link)
+        lxml = driver.page_source
+        soup = BeautifulSoup(lxml, 'lxml')
+        title = soup.find('span', class_='topic-body__title').get_text()
+        date_pub_str = soup.find('time', class_='topic-header__item topic-header__time').get_text()
+        date_pub = form_date_from_str(date_pub_str)
+        unwanted = soup.find('div', class_='tradingview-widget-copyright')
+        if unwanted is not None:
+            unwanted.extract()
+        content = '\n'.join(map(lambda t: t.get_text(), soup.find('div', class_='topic-body__content').findChildren('p', class_='topic-body__content-text')))
+        num_comments = 0
+        comments_count_tag = soup.find('span', class_='comments__count')
+        if comments_count_tag is not None:
+            num_comments_str = comments_count_tag.get_text()
+            res = re.search(r"\((\d+)\)", num_comments_str)
+            if res is not None:
+                num_comments = int(res.group(1))
+        tags_tag = soup.find('a', class_='rubric-header__link _active')
+        tags = ''
+        if tags_tag is not None:
+            tags = tags_tag.get_text()
+        result = {
+            'title': title,
+            'date': date_pub.strftime('%d.%m.%Y'),
+            'content': content,
+            'num_views': num_comments * 5,
+            'num_comments': num_comments,
+            'tags': tags
+        }
+        with open('news_lentaru.csv', 'a', encoding='utf-8') as file:
+            keys = result.keys()
+            writer = DictWriter(file, keys)
+            writer.writerow(result)
+    except TimeoutException as e:
+        print(e)
 
 
 def get_articles_by_day(date_look):
@@ -118,9 +121,9 @@ def write_news(path, news):
         writer.writerows(news)
 
 if __name__ == '__main__':
-    start = date(2020, 10, 7)
+    #start = date(2020, 10, 7)
     end = date.today()
-    get_news(start, end)
+    get_news(end, end)
     try:
         driver.quit()
     except:
