@@ -15,9 +15,6 @@ import traceback
 from datetime import datetime, date
 from csv import DictWriter
 
-
-url = 'https://www.rbc.ru/economics/?utm_source=topline'
-
 def get_links(url):
     scroll_pause_time = 0.1
     options = webdriver.FirefoxOptions()
@@ -91,7 +88,7 @@ def get_article(session, url):
 
 
 
-def get_news():
+def get_news(url):
     links = list(get_links(url)['links'])
     news = []
     session = requests.Session()
@@ -100,8 +97,11 @@ def get_news():
 
 
 if __name__ == '__main__':
+    url1 = 'https://www.rbc.ru/economics/?utm_source=topline'
+    url2 = 'https://www.rbc.ru/business/?utm_source=topline'
     try:
-        get_news()
+        get_news(url1)
+        get_news(url2)
 
     except Exception as e:
         
