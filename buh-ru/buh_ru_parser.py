@@ -60,6 +60,7 @@ def get_news(date_from, date_to):
             }
             path = 'news_buhru.csv'
             with open(path, 'a', encoding='utf-8') as file:
+                keys = result.keys()
                 writer = DictWriter(file, keys)
                 writer.writerow(result)
         else:

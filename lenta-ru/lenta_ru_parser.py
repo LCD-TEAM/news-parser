@@ -118,9 +118,9 @@ def write_news(path, news):
         writer.writerows(news)
 
 if __name__ == '__main__':
-    start = date(2022, 10, 7)
+    start = date(2020, 10, 7)
     end = date.today()
-    get_news(start, start)
+    get_news(start, end)
     try:
         driver.quit()
     except:
