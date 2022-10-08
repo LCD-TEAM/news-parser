@@ -50,7 +50,8 @@ def get_news(start: date, end: date, file_path: str):
     """
     Парсит страницы и записывает в file_path новости
     """
-    dates = [str(start + timedelta(days = x)) for x in range((end - start).days + 1)]
+    
+    dates = [str(start + timedelta(days = x)) for x in range((end - start).days + 1)][::-1]
 
     keys = ['title', 'url', 'date', 'content', 'num_views', 'num_comments']
 
@@ -63,6 +64,8 @@ def get_news(start: date, end: date, file_path: str):
         dict_writer.writeheader()
 
     for day_news in dates:
+        with open(dirname(realpath(__file__)) + '/end_date.txt', 'w') as f_date:
+            f_date.write(day_news)
         for i in get_soup_news_date(*day_news.split('-')):
             if i.a is not None:
                 date = i.find_all('div', class_='l31caf777')[0].get_text().strip()
@@ -89,19 +92,16 @@ def get_news(start: date, end: date, file_path: str):
                 }
 
                 dict_writer.writerow(news)
-
-        with open(dirname(realpath(__file__)) + '/end_date.txt', 'w') as f_date:
-            f_date.write(day_news)
     
 
 if __name__ == "__main__":
     # пример
-    start = date(2020,1,1)
+    start = date(2022,3,18)
 
     # раскомментить, если начальную дату берешь из файла
 
     # with open(dirname(realpath(__file__)) + '/end_date.txt', 'r') as f_date:
     #     start = date(*list(map(int, f_date.readline().split('-'))))
 
-    end = date.today()
+    end = date(2022,8,17)
     get_news(start, end, PROJECT_DIR + config['banki_ru_path'])
