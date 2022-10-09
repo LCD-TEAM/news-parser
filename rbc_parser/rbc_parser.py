@@ -14,7 +14,7 @@ import time
 import traceback
 from datetime import datetime, date
 from csv import DictWriter
-
+        
 def get_links(url):
     scroll_pause_time = 0.1
     options = webdriver.FirefoxOptions()
@@ -55,7 +55,7 @@ def get_links(url):
 
 
 
-def get_article(session, url):
+def get_article(session, url, file_path):
 
     try:
         req = session.get(url)
@@ -76,34 +76,24 @@ def get_article(session, url):
             'num_comments': 0,
             'tags': tags
             }
-        with open('news_rbc.csv', 'a', encoding='utf-8') as file:
+        with open(file_path, 'a', encoding='utf-8') as file:
             keys = result.keys()
             writer = DictWriter(file, keys)
             writer.writerow(result)
 
     except Exception as e:
-        print(url)
         title_final = ''
         article_text = ''
 
-
-
-def get_news(url):
+def set_news(url, file_path):
     links = list(get_links(url)['links'])
     news = []
     session = requests.Session()
     for link in links:
-        get_article(session, link)
+        get_article(session, link, file_path)
 
-
-if __name__ == '__main__':
+def get_news(file_path):
     url1 = 'https://www.rbc.ru/economics/?utm_source=topline'
     url2 = 'https://www.rbc.ru/business/?utm_source=topline'
-    try:
-        get_news(url1)
-        get_news(url2)
-
-    except Exception as e:
-        
-        print(e)
-        print(traceback.format_exc())
+    set_news(url1, file_path)
+    set_news(url2, file_path)

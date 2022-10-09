@@ -31,6 +31,7 @@ months = {
 }
 
 base_url = 'https://www.gartner.com'
+url = '/smarterwithgartner/archive'
 
 def get_date_from_str(date_str):
     parts = date_str.split(' ')
@@ -54,7 +55,6 @@ def get_links(url, num_articles):
             driver.execute_script("return arguments[0].style.display='block';", elem)
             driver.execute_script("return arguments[0].scrollIntoView(true);", elem)
             if elem.is_displayed() is False:
-                print('break')
                 break
             webdriver.ActionChains(driver).click(elem).perform()
             num_links += 8
@@ -79,20 +79,17 @@ def get_links(url, num_articles):
         return final
 
     except Exception as e:
-        print(e)
-        print('test')
         return None
     finally:
         driver.quit()
 
-def get_article(session, url):
+def get_article(session, url, file_path):
     try:
         req = session.get(base_url + url)
         plain_text = req.text
         html = BeautifulSoup(plain_text, 'lxml')
         title = html.find('div', class_='hero-content').findChild('h1').get_text()
         date = get_date_from_str(html.find('span', class_='p-small').get_text()).strftime('%d.%m.%Y')
-        print(date)
         contents = []
         contents.append(html.find('p', class_='p-intro-lg').get_text())
         for div in html.findAll('div', class_='cmp-globalsite-articletext'):
@@ -111,21 +108,16 @@ def get_article(session, url):
             'num_comments': num_comments,
             'tags': tags
         }
-        with open('gartner_news.csv', 'a', encoding='utf-8') as file:
+        with open(file_path, 'a', encoding='utf-8') as file:
             keys = result.keys()
             writer = DictWriter(file, keys)
             writer.writerow(result)
     except Exception as e:
-        print(e)
+        pass
 
-def get_news(url, num_articles):
+def get_news(num_articles, file_path):
     links = list(get_links(base_url + url, num_articles)['links'])
     news = []
     session = requests.Session()
     for link in links:
-        get_article(session, link)
-
-if __name__ == '__main__':
-    url = '/smarterwithgartner/archive'
-    num_articles = 100
-    get_news(url, num_articles)
+        get_article(session, link, file_path)

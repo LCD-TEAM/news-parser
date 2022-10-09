@@ -4,6 +4,8 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime
 from csv import DictWriter
 
+url = 'https://buh.ru'    
+
 class DatetimeRange:
     def __init__(self, dt1, dt2):
         self._dt1 = dt1
@@ -11,6 +13,11 @@ class DatetimeRange:
 
     def __contains__(self, dt):
         return self._dt1 <= dt <= self._dt2
+
+options = webdriver.FirefoxOptions()
+options.add_argument('--headless')
+driver = webdriver.Firefox(options=options)
+driver.quit()
 
 def _get_num_views(html):
     res = re.search('\$\("\.data_post\s*\.views"\)\.text\(\s*(\d*)\)', html)
@@ -33,12 +40,7 @@ def _get_tags(soup):
         rubrics = ''
     return themes + ';' + rubrics
 
-url = 'https://buh.ru'
-options = webdriver.FirefoxOptions()
-options.add_argument('--headless')
-driver = webdriver.Firefox(options=options)
-
-def get_news(date_from, date_to):
+def get_news(date_from, date_to, file_path):
     dt_range = DatetimeRange(date_from, date_to)
     page_num = 1
     continue_scrap = True
@@ -54,7 +56,6 @@ def get_news(date_from, date_to):
             news_soup = BeautifulSoup(news_page, 'lxml')
             date_str = news_soup.find('span', class_='grayd').get_text()
             article = news_soup.find('div', class_='tip-news', itemprop='articleBody').findChildren('p')
-            print(date_str)
             if datetime.strptime(date_str, '%d.%m.%Y').date() in dt_range:
                 result = {
                     'title': news_soup.find('h1', class_='margin_line-height phead specdiv').get_text(),
@@ -64,7 +65,7 @@ def get_news(date_from, date_to):
                     'num_comments': _get_num_comments(news_soup),
                     'tags': _get_tags(news_soup)
                 }
-                path = 'news_buhru.csv'
+                path = file_path
                 with open(path, 'a', encoding='utf-8') as file:
                     keys = result.keys()
                     writer = DictWriter(file, keys)
@@ -82,10 +83,4 @@ def write_news(path, news):
         writer = DictWriter(file, keys)
         writer.writeheader()
         writer.writerows(news)
-
-if __name__ == '__main__':
-    start = date(2020, 10, 7)
-    end = date.today()
-    #write_news('news_buhru.csv', get_news(start, end))
-    get_news(start, end)
     

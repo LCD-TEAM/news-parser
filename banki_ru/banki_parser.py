@@ -3,17 +3,13 @@ from datetime import date, timedelta
 from bs4 import BeautifulSoup
 import requests
 import csv
-import toml
 import os
 from selenium import webdriver
-
-PROJECT_DIR = join(dirname(realpath(__file__)), "..")
-CONFIG_PATH = join(PROJECT_DIR, "config.toml")
-config = toml.load(CONFIG_PATH)
 
 options = webdriver.FirefoxOptions()
 options.add_argument('--headless')
 driver = webdriver.Firefox(options=options)
+driver.quit()
 
 def get_soup_news_date(year: int, month: int, day: int):
     """
@@ -104,4 +100,4 @@ if __name__ == "__main__":
     #     start = date(*list(map(int, f_date.readline().split('-'))))
 
     end = date(2022,8,17)
-    get_news(start, end, PROJECT_DIR + config['banki_ru_path'])
+    #get_news(start, end, PROJECT_DIR + config['banki_ru_path'])
